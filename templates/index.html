@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Vantage Stock Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Alpha Vantage Stock Dashboard</h1>
+    <div>
+        <input type="text" id="stock-symbol" placeholder="Enter stock ticker (e.g., AAPL)">
+        <button id="fetch-data">Get Stock Data</button>
+    </div>
+    <div id="loading" style="display: none; color: blue;">Loading...</div>
+    <div id="output">
+        <h2>Stock Data</h2>
+        <p id="error-message" style="color: red;"></p>
+        <table>
+            <tr><th>Symbol</th><td id="symbol"></td></tr>
+            <tr><th>Date</th><td id="date"></td></tr>
+            <tr><th>Open</th><td id="open"></td></tr>
+            <tr><th>High</th><td id="high"></td></tr>
+            <tr><th>Low</th><td id="low"></td></tr>
+            <tr><th>Close</th><td id="close"></td></tr>
+            <tr><th>Volume</th><td id="volume"></td></tr>
+        </table>
+    </div>
+
+    <div class="technical-container">
+        <h2>Technical Indicators</h2>
+        <p id="technical-error-message" style="color: red;"></p>
+        <table>
+            <tr><th>Moving Average (MA)</th><td id="ma"></td></tr>
+            <tr><th>Relative Strength Index (RSI)</th><td id="rsi"></td></tr>
+            <tr><th>Average Directional Index (ADX)</th><td id="adx"></td></tr>
+            <tr><th>MACD</th><td id="macd"></td></tr>
+            <tr><th>Bollinger Bands</th><td id="bollinger"></td></tr>
+            <tr><th>On-Balance Volume (OBV)</th><td id="obv"></td></tr>
+            <tr><th>Stochastic Oscillator</th><td id="stochastic"></td></tr>
+        </table>
+    </div>
+    
+
+
+
+
+
+        <!-- BTC Data show -->
+    <div class="btc-container" style="margin-top: 20px;">
+        <h2>Bitcoin (BTC) Data</h2>
+        <div id="btc-loading" style="display: none; color: blue;">Loading BTC data...</div>
+        <p id="btc-error-message" style="color: red;"></p>
+        <table>
+            <tr><th>Symbol</th><td id="btc-symbol"></td></tr>
+            <tr><th>Last Refreshed</th><td id="btc-date"></td></tr>
+            <tr><th>Price (USD)</th><td id="btc-price"></td></tr>
+            <tr><th>Volume (24h)</th><td id="btc-volume"></td></tr>
+            <tr><th>Market Cap (USD)</th><td id="btc-market-cap"></td></tr>
+        </table>
+    </div>
+    
+
+    <canvas id="stockChart" width="400" height="200" style="margin-top: 20px;"></canvas>
+    <script src="/static/script.js"></script>
+</body>
+</html>
