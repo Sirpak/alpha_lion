@@ -1,142 +1,140 @@
-const fetchButton = document.getElementById("fetch-data");
-const loadingIndicator = document.getElementById("loading");
-const apiKey = "MFSNKGMEDOPRMOE5"; // Replace with your actual API key
-const baseUrl = "https://www.alphavantage.co/query";
+document.addEventListener("DOMContentLoaded", () => {
+    const fetchButton = document.getElementById("fetch-data");
+    const loadingIndicator = document.getElementById("loading");
 
-const ctx = document.getElementById("stockChart").getContext("2d");
-const chart = new Chart(ctx, {
-    type: "line",
-    data: {
-        labels: [], // Time labels
-        datasets: [{
-            label: "Stock Price",
-            data: [], // Stock prices
-            borderColor: "rgba(75, 192, 192, 1)",
-            borderWidth: 2,
-            fill: false
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: true
-            }
+    fetchButton.addEventListener("click", async () => {
+        const symbol = document.getElementById("stock-symbol").value.trim();
+
+        if (!symbol) {
+            alert("Please enter a stock ticker.");
+            return;
         }
-    }
-});
 
-// Fetch stock data
-fetchButton.addEventListener("click", function () {
-    const symbol = document.getElementById("stock-symbol").value.trim();
+        loadingIndicator.style.display = "block";
 
-    // Clear previous data or error messages
-    document.getElementById("error-message").innerText = "";
-    document.getElementById("symbol").innerText = "";
-    document.getElementById("date").innerText = "";
-    document.getElementById("open").innerText = "";
-    document.getElementById("high").innerText = "";
-    document.getElementById("low").innerText = "";
-    document.getElementById("close").innerText = "";
-    document.getElementById("volume").innerText = "";
-    document.getElementById("ma").innerText = "";
-    document.getElementById("rsi").innerText = "";
-    document.getElementById("adx").innerText = "";
-    document.getElementById("macd").innerText = "";
-    document.getElementById("bollinger").innerText = "";
-    document.getElementById("obv").innerText = "";
-    document.getElementById("stochastic").innerText = "";
-
-    if (!symbol) {
-        document.getElementById("error-message").innerText = "Please enter a stock ticker.";
-        return;
-    }
-
-    // Show loading indicator
-    loadingIndicator.style.display = "block";
-
-    // Fetch stock data from the backend
-    fetch(`/api/stock/${symbol}`)
-        .then((response) => response.json())
-        .then((data) => {
-            loadingIndicator.style.display = "none"; // Hide loading indicator
+        try {
+            const response = await fetch(`/api/stock/${symbol}`);
+            const data = await response.json();
 
             if (data.error) {
-                document.getElementById("error-message").innerText = data.error;
-                return;
+                throw new Error(data.error);
             }
 
-            // Populate stock data
+            // Update UI with stock data
             document.getElementById("symbol").innerText = data.symbol;
             document.getElementById("date").innerText = data.date;
-            document.getElementById("open").innerText = data.latest_data.open.toFixed(2);
-            document.getElementById("high").innerText = data.latest_data.high.toFixed(2);
-            document.getElementById("low").innerText = data.latest_data.low.toFixed(2);
-            document.getElementById("close").innerText = data.latest_data.close.toFixed(2);
+            document.getElementById("open").innerText = data.latest_data.open;
+            document.getElementById("high").innerText = data.latest_data.high;
+            document.getElementById("low").innerText = data.latest_data.low;
+            document.getElementById("close").innerText = data.latest_data.close;
             document.getElementById("volume").innerText = data.latest_data.volume;
 
-            // Populate technical indicators
-            document.getElementById("ma").innerText = data.indicators.MA.toFixed(2);
-            document.getElementById("rsi").innerText = data.indicators.RSI.toFixed(2);
-            document.getElementById("adx").innerText = data.indicators.ADX.toFixed(2);
-            document.getElementById("macd").innerText = data.indicators.MACD.toFixed(2);
-            document.getElementById("bollinger").innerText = JSON.stringify(data.indicators["Bollinger Bands"]);
-            document.getElementById("obv").innerText = data.indicators.OBV.toFixed(2);
-            document.getElementById("stochastic").innerText = JSON.stringify(data.indicators["Stochastic Oscillator"]);
+            // Update Chart
+            const times = Object.keys(data.time_series).slice(0, 10).reverse();
+            const prices = times.map(time => data.time_series[time].close);
 
-            // Update chart with the most recent 10 points
-            const recentTimes = Object.keys(data.latest_data).slice(0, 10).reverse();
-            const recentPrices = recentTimes.map(time => parseFloat(data.latest_data[time]["close"]));
-            updateChart(recentTimes, recentPrices);
-        })
-        .catch((error) => {
-            loadingIndicator.style.display = "none"; // Hide loading indicator
-            document.getElementById("error-message").innerText = `Error: ${error.message}`;
-        });
+            updateChart(times, prices);
+        } catch (error) {
+            document.getElementById("error-message").innerText = error.message;
+        } finally {
+            loadingIndicator.style.display = "none";
+        }
+    });
+
+    const ctx = document.getElementById("stockChart").getContext("2d");
+    const chart = new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "Stock Price", data: [] }] },
+    });
+
+    function updateChart(labels, data) {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = data;
+        chart.update();
+    }
 });
 
-// Update the chart with new data
-function updateChart(timeLabels, prices) {
-    chart.data.labels = timeLabels;
-    chart.data.datasets[0].data = prices;
-    chart.update();
-}
 
-def fetch_stock_data(symbol):
-    params = {
-        "function": "TIME_SERIES_DAILY_ADJUSTED",
-        "symbol": symbol,
-        "outputsize": "compact",
-        "apikey": API_KEY,
-    }
-    try:
-        response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
 
-        if "Time Series (Daily)" not in data:
-            raise ValueError(f"No 'Time Series (Daily)' data found for symbol: {symbol}")
+// Event listener for SMA data
+document.addEventListener("DOMContentLoaded", () => {
+    const fetchButton = document.getElementById("fetch-data");
+    const loadingIndicator = document.getElementById("loading");
 
-        time_series = data["Time Series (Daily)"]
-        df = pd.DataFrame.from_dict(time_series, orient="index", dtype=float)
-        df.rename(columns={
-            "1. open": "open",
-            "2. high": "high",
-            "3. low": "low",
-            "4. close": "close",
-            "5. volume": "volume"
-        }, inplace=True)
+    fetchButton.addEventListener("click", async () => {
+        const symbol = document.getElementById("stock-symbol").value.trim();
 
-        # Replace string NaNs with actual np.nan and clean data
-        df.replace(["NA", "NaN", "nan"], np.nan, inplace=True)
-        df = df.astype(float)
+        if (!symbol) {
+            alert("Please enter a stock ticker.");
+            return;
+        }
 
-        # Handle missing data
-        df.dropna(inplace=True)
+        loadingIndicator.style.display = "block";
 
-        df.sort_index(inplace=True)
-        return df
-    except requests.exceptions.RequestException as e:
-        raise ValueError(f"Network error occurred: {e}")
-    except ValueError as ve:
-        raise ValueError(f"Data error: {ve}")
+        try {
+            // Fetch SMA data
+            const smaResponse = await fetch(`/api/sma/${symbol}?interval=daily&time_period=10`);
+            const smaData = await smaResponse.json();
+
+            if (smaData.error) {
+                throw new Error(smaData.error);
+            }
+
+            // Update UI with SMA data
+            const smaList = document.getElementById("sma-data");
+            smaList.innerHTML = ""; // Clear previous SMA data
+            smaData.sma_data.forEach(item => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `Date: ${item.date}, SMA: ${item.sma}`;
+                smaList.appendChild(listItem);
+            });
+        } catch (error) {
+            document.getElementById("error-message").innerText = error.message;
+        } finally {
+            loadingIndicator.style.display = "none";
+        }
+    });
+});
+
+
+
+// Event listener for EMA
+document.addEventListener("DOMContentLoaded", () => {
+    const fetchButton = document.getElementById("fetch-data");
+    const loadingIndicator = document.getElementById("loading");
+
+    fetchButton.addEventListener("click", async () => {
+        const symbol = document.getElementById("stock-symbol").value.trim();
+
+        if (!symbol) {
+            alert("Please enter a stock ticker.");
+            return;
+        }
+
+        loadingIndicator.style.display = "block";
+
+        try {
+            // Fetch EMA data
+            const emaResponse = await fetch(`/api/ema/${symbol}?interval=daily&time_period=10&series_type=close`);
+            const emaData = await emaResponse.json();
+
+            if (emaData.error) {
+                throw new Error(emaData.error);
+            }
+
+            // Update UI with EMA data
+            const emaList = document.getElementById("ema-data");
+            emaList.innerHTML = ""; // Clear previous EMA data
+            emaData.ema_data.forEach(item => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `Date: ${item.date}, EMA: ${item.ema}`;
+                emaList.appendChild(listItem);
+            });
+        } catch (error) {
+            document.getElementById("error-message").innerText = error.message;
+        } finally {
+            loadingIndicator.style.display = "none";
+        }
+    });
+});
+
